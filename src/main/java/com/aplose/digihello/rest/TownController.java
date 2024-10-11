@@ -3,7 +3,9 @@ package com.aplose.digihello.rest;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.StreamSupport;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.aplose.digihello.dto.TownDto;
 import com.aplose.digihello.model.Town;
 import com.aplose.digihello.service.TownService;
 
@@ -24,11 +27,13 @@ import com.aplose.digihello.service.TownService;
 public class TownController {
 	@Autowired
 	private TownService townService;
+	@Autowired
+	private ModelMapper modelMapper;
 	
 
 	@GetMapping
-	public Iterable<Town> getTowns(){
-		return townService.getAllTowns();
+	public List<TownDto> getAllTowns(){
+		return StreamSupport.stream(townService.getAllTowns().spliterator(),true).map(town -> modelMapper.map(town,TownDto.class)).toList();
 	}
 	@GetMapping("/{id}")
 	public Town getTown(@PathVariable("id") Long id) {
