@@ -12,6 +12,7 @@ import com.aplose.digihello.model.Town;
 public interface TownRepository extends CrudRepository<Town, Long> {
 	public Town findByName(String name);
 	public List<Town> findByNameStartingWith(String name);
+	public Town findByNameAndDepartmentCode(String name, String departmentCode);
 	public List<Town> findByNbInhabitantsGreaterThan(Integer nb);	
 	public List<Town> findByNbInhabitantsBetween(Integer nbMin, Integer nbMax);	
 	public List<Town> findByDepartmentCodeAndNbInhabitantsGreaterThan(String departmentCode, Integer nb);	
