@@ -10,6 +10,10 @@ public class Ville {
         this.nbHabitants = nbHabitants;
     }
 
+    public Ville() {
+
+    }
+
     /**
      * Getter for getnom
      *
