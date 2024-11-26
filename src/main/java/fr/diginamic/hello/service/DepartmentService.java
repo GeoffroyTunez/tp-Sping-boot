@@ -5,8 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aplose.digihello.dao.DepartmentDAO;
-import com.aplose.digihello.model.Department;
+import fr.diginamic.hello.dao.DepartmentDAO;
+import fr.diginamic.hello.model.Department;
 
 import jakarta.annotation.PostConstruct;
 

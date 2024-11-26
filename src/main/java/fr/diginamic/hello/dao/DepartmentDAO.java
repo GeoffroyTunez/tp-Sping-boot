@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.aplose.digihello.model.Department;
-import com.aplose.digihello.model.Town;
+import fr.diginamic.hello.model.Department;
+import fr.diginamic.hello.model.Town;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

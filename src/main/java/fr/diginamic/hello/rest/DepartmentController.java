@@ -1,4 +1,4 @@
-package com.aplose.digihello.rest;
+package fr.diginamic.hello.rest;
 
 import java.util.List;
 
@@ -14,8 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.aplose.digihello.model.Department;
-import com.aplose.digihello.service.DepartmentService;
+import fr.diginamic.hello.model.Department;
+import fr.diginamic.hello.service.DepartmentService;
 
 @RestController
 @RequestMapping("/department")

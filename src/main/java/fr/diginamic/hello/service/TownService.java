@@ -7,9 +7,9 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.aplose.digihello.dao.TownDAO;
-import com.aplose.digihello.model.Department;
-import com.aplose.digihello.model.Town;
+import fr.diginamic.hello.dao.TownDAO;
+import fr.diginamic.hello.model.Department;
+import fr.diginamic.hello.model.Town;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.NoResultException;
