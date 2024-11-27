@@ -1,93 +1,92 @@
 package fr.diginamic.hello.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Optional;
 
+import fr.diginamic.hello.Repository.VilleRepository;
+import fr.diginamic.hello.model.Department;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import fr.diginamic.hello.dao.TownDAO;
-import fr.diginamic.hello.model.Department;
 import fr.diginamic.hello.model.Town;
-
-import jakarta.annotation.PostConstruct;
-import jakarta.persistence.NoResultException;
 
 
 @Service
 public class TownService {
 	@Autowired
-	TownDAO townDAO;
+	VilleRepository villeRepository;
 	@Autowired
 	DepartmentService departmentService;
-	
-//	@PostConstruct
-	public void init() {
-		//first time we create some towns because db is empty...
-		townDAO.create(new Town("Paris",2133111,departmentService.findByCode("75")));
-		townDAO.create(new Town("Marseille", 873076,departmentService.findByCode("13")));
-		townDAO.create(new Town("Lyon", 522250,departmentService.findByCode("69")));
+
+	public Iterable<Town> getAllTowns(){
+		return villeRepository.findAll();
 	}
-	
-	public List<Town> getAllTowns(){
-		return townDAO.findAll();
+
+	public Optional<Town> getTown(Long id) {
+		return villeRepository.findById(id);
 	}
-	
-	public Town getTown(Long id) {
-		Town result = null;
-		try {
-			result = townDAO.find(id);
-		}catch(NoResultException nre) {
-		}
-		return result;
-	}
-	
+
 	public Town getTownByName(String name) {
-		Town result = null;
-		try {
-			result = townDAO.findByName(name);
-		}catch(NoResultException nre) {
-		}
-		return result;
+		return villeRepository.findByName(name);
 	}
-	
+
 	public boolean addTown(Town town) {
-		try {
-			Town result = townDAO.findByName(town.getName());
+		Town result = villeRepository.findByName(town.getName());
+		if (result!=null) {
 			return false;
-		}catch(NoResultException nre) {
-			townDAO.create(town);
+		}else {
+			town.setId(null);
+			Department d = departmentService.findById(town.getDepartment().getId()).get();
+			if(d != null){
+				town.setDepartment(d);
+			}else{
+				departmentService.create(town.getDepartment());
+			}
+			villeRepository.save(town);
 			return true;
-		}		
+		}
 	}
+
 	public boolean updateTown(Town town) {
-		try {
-			Town result = townDAO.find(town.getId());
-			result.setName(town.getName());
-			result.setNbInhabitants(town.getNbInhabitants());
-			townDAO.update(result);
-			return true;
-		}catch(NoResultException nre) {
+		Optional<Town> result = villeRepository.findById(town.getId());
+		if (result.isEmpty()) {
 			return false;
 		}
+		Town townToUpdate = result.get();
+		townToUpdate.setName(town.getName());
+		villeRepository.save(townToUpdate);
+		return true;
 	}
 	public boolean deleteTown(Long id) {
-		try {
-			Town result = townDAO.find(id);
-			townDAO.deleteById(id);
-			return true;
-		}catch (NoResultException nre) {
-			return false;			
+		Optional<Town> result = villeRepository.findById(id);
+		if (result.isEmpty()) {
+			return false;
 		}
+		villeRepository.deleteById(id);
+		return true;
 	}
 
-	public List<Town> findByDepartmentCodeOrderByNbInhabitantsDesc(String codeDep, Integer n) {
-		return townDAO.findByDepartmentCodeOrderByNbInhabitantsDesc(codeDep,n);
+	public Iterable<Town> getTownByNameStart(String nameStart) {
+		return villeRepository.findByNameStartingWith(nameStart);
 	}
 
-	public List<Town> findByDepartmentCodeAndNbInhabitantsBetween(String codeDep, Integer min, Integer max) {
-		return townDAO.findByDepartmentCodeAndNbInhabitantsBetween(codeDep,min,max);
+	public Iterable<Town> findByNbInhabitantsGreaterThan(Integer min) {
+		return villeRepository.findByNbInhabitantsGreaterThan(min);
+	}
+
+	public Iterable<Town> findByNbInhabitantsBetween(Integer min, Integer max) {
+		return villeRepository.findByNbInhabitantsBetween(min, max);
+	}
+
+	public Iterable<Town> findByDepartmentCodeAndNbInhabitantsGreaterThan(String departmentCode, Integer min) {
+		return villeRepository.findByDepartmentCodeAndNbInhabitantsGreaterThan(departmentCode,min);
+	}
+
+	public Iterable<Town> findByDepartmentCodeAndNbInhabitantsBetween(String departmentCode, Integer min, Integer max) {
+		return villeRepository.findByDepartmentCodeAndNbInhabitantsBetween(departmentCode,min, max);
+	}
+	public Iterable<Town> findByDepartmentCodeOrderByNbInhabitantsDesc(String departmentCode, Integer size) {
+		return villeRepository.findByDepartmentCodeOrderByNbInhabitantsDesc(departmentCode,Pageable.ofSize(size)).getContent();
 	}
 
 }

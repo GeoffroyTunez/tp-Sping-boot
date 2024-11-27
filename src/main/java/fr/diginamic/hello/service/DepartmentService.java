@@ -1,7 +1,9 @@
 package fr.diginamic.hello.service;
 
 import java.util.List;
+import java.util.Optional;
 
+import fr.diginamic.hello.Repository.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +16,9 @@ import jakarta.annotation.PostConstruct;
 @Service
 public class DepartmentService {
 	@Autowired
-	DepartmentDAO departmentDAO;
-	
-//	@PostConstruct
+	DepartmentRepository departmentRepository;
+
+	//	@PostConstruct
 	public void init() {
 		create(new Department("75", "Paris"));
 		create(new Department("13", "Bouches-du-Rhône"));
@@ -25,7 +27,7 @@ public class DepartmentService {
 
 	public boolean create(Department department) {
 		try {
-			departmentDAO.create(department);
+			departmentRepository.save(department);
 			return true;
 		}catch (Exception e) {
 			return false;
@@ -33,32 +35,32 @@ public class DepartmentService {
 	}
 
 	public List<Department> findAll() {
-		 return departmentDAO.findAll();
+		return departmentRepository.findAll();
 	}
 
 	public Department findByCode(String code) {
-		return departmentDAO.findByCode(code);
+		return departmentRepository.findByCode(code);
 	}
 
-	public Department findById(Long id) {
-		return departmentDAO.findById(id);
+	public Optional<Department> findById(Long id) {
+		return departmentRepository.findById(id);
 	}
-	
+
 	public boolean update(Department department) {
-		if(department.getId()==null||departmentDAO.findById(department.getId())==null) {
+		if(department.getId()==null||departmentRepository.findById(department.getId()).isEmpty()) {
 			return false;
 		}else {
-			departmentDAO.update(department);
+			departmentRepository.save(department);
 			return true;
 		}
 	}
 	public boolean delete(Long id) {
-		if(id==null||departmentDAO.findById(id)==null) {
+		if(id==null||departmentRepository.findById(id).isEmpty()) {
 			return false;
 		}else {
-			departmentDAO.deleteById(id);
+			departmentRepository.deleteById(id);
 			return true;
 		}
 	}
-	
+
 }

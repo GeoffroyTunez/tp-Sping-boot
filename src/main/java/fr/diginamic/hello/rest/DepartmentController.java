@@ -22,18 +22,18 @@ import fr.diginamic.hello.service.DepartmentService;
 public class DepartmentController {
 	@Autowired
 	DepartmentService departmentService;
-	
+
 	@PostMapping
 	public ResponseEntity<String> create(@RequestBody Department department){
 		if(departmentService.create(department)) {
 			return new ResponseEntity<String>("Succès !",HttpStatus.OK);
 		}else {
 			return new ResponseEntity<String>("Impossible de créer le département envoyé : "+department.toString(),HttpStatus.BAD_REQUEST);
-		}		
+		}
 	}
 	@GetMapping
 	public List<Department> findAll(){
-		
+
 		return departmentService.findAll();
 	}
 	@GetMapping("/{code}")
