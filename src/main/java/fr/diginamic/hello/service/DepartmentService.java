@@ -16,8 +16,8 @@ public class DepartmentService {
 	@Autowired
 	DepartmentDAO departmentDAO;
 	
-	@PostConstruct
-	public void init() {	
+//	@PostConstruct
+	public void init() {
 		create(new Department("75", "Paris"));
 		create(new Department("13", "Bouches-du-Rhône"));
 		create(new Department("69","Rhône"));

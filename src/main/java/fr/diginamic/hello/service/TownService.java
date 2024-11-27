@@ -22,8 +22,8 @@ public class TownService {
 	@Autowired
 	DepartmentService departmentService;
 	
-	@PostConstruct
-	public void init() {	
+//	@PostConstruct
+	public void init() {
 		//first time we create some towns because db is empty...
 		townDAO.create(new Town("Paris",2133111,departmentService.findByCode("75")));
 		townDAO.create(new Town("Marseille", 873076,departmentService.findByCode("13")));
