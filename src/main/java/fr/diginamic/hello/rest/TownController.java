@@ -1,9 +1,18 @@
 package fr.diginamic.hello.rest;
 
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfDocument;
+import com.itextpdf.text.pdf.PdfWriter;
 import fr.diginamic.hello.Repository.VilleRepository;
+import fr.diginamic.hello.dto.DepartementDto;
 import fr.diginamic.hello.exceptionHandler.FunctionalException;
 import fr.diginamic.hello.service.DepartmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.diginamic.hello.model.Town;
 import fr.diginamic.hello.service.TownService;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping("/town")
@@ -30,6 +40,9 @@ public class TownController {
 	private TownService townService;
     @Autowired
     private DepartmentService departmentService;
+
+	private final static String FILE_NAME = "src/test/resources/chien-test-01.csv";
+
 
 	private void validateTown(Town town) throws FunctionalException {
 		if(town.getNbInhabitants() > 10){
@@ -84,6 +97,62 @@ public class TownController {
 			throw new FunctionalException("Aucune ville n'a une population supérieure à " + min);
 		}
 	}
+
+
+	@GetMapping("/findByNbInhabitantsGreaterThan/{min}/csv")
+	public ResponseEntity<String> getTownByNbInhabitantsGreaterThanToCsv(@PathVariable("min") Integer min) throws FunctionalException {
+		// Vérifier si des villes répondent au critère
+		Iterable<Town> towns = townService.findByNbInhabitantsGreaterThan(min);
+
+		if (towns == null) {
+			throw new FunctionalException("Aucune ville n'a une population supérieure à " + min);
+		}
+
+		// Chemin du fichier CSV
+		String dest = "src/main/resources/csv/ville.csv";
+		File file = new File(dest);
+		File parentDir = file.getParentFile();
+
+		if (!parentDir.exists()) {
+			parentDir.mkdirs(); // Crée les répertoires nécessaires
+		}
+
+		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(dest))) {
+			// Écrire l'en-tête du fichier CSV
+			writer.write("Nom de la ville,Nombre d'habitants,Code département,Nom du département");
+			writer.newLine();
+
+			RestTemplate restTemplate = new RestTemplate();
+
+			// Écrire les données des villes dans le fichier CSV
+			for (Town ville : towns) {
+				// Appeler l'API pour obtenir le nom du département
+				String apiUrl = "https://geo.api.gouv.fr/departements/" + ville.getDepartment().getCode() + "?fields=nom,code,codeRegion";
+				ResponseEntity<DepartementDto> response = restTemplate.getForEntity(apiUrl, DepartementDto.class);
+
+				String nomDepartement = "Non disponible"; // Par défaut, si l'API échoue
+				if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+					nomDepartement = response.getBody().getNom();
+				}
+
+				// Écrire une ligne dans le fichier CSV
+				writer.write(String.format("%s,%d,%s,%s",
+						ville.getName(),
+						ville.getNbInhabitants(),
+						ville.getDepartment().getCode(),
+						nomDepartement
+				));
+				writer.newLine();
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Erreur lors de la génération du fichier CSV", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		return new ResponseEntity<>("CSV généré avec succès à l'emplacement : " + dest, HttpStatus.OK);
+	}
+
 
 
 

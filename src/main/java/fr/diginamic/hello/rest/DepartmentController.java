@@ -1,8 +1,18 @@
 package fr.diginamic.hello.rest;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.List;
+import java.nio.file.*;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfDocument;
+import com.itextpdf.text.pdf.PdfWriter;
+import fr.diginamic.hello.dto.DepartementDto;
 import fr.diginamic.hello.exceptionHandler.FunctionalException;
+import fr.diginamic.hello.model.Town;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import fr.diginamic.hello.model.Department;
 import fr.diginamic.hello.service.DepartmentService;
+import org.springframework.web.client.RestTemplate;
 
 @RestController
 @RequestMapping("/department")
@@ -57,6 +68,63 @@ public class DepartmentController {
 	public Department findByCode(@PathVariable String code){
 		return departmentService.findByCode(code);
 	}
+
+
+	@GetMapping("/{code}/pdf")
+	public ResponseEntity<String> findByCodeToPdf(@PathVariable String code) {
+		// Récupération du département en interne (par code)
+		Department department = departmentService.findByCode(code);
+
+		if (department == null) {
+			return new ResponseEntity<>("Département non trouvé", HttpStatus.NOT_FOUND);
+		}
+
+		// Appel à l'API pour récupérer les informations externes (nom du département)
+
+		try {
+			RestTemplate restTemplate = new RestTemplate(); // Instanciation directe
+			String apiUrl = "https://geo.api.gouv.fr/departements/" + code + "?fields=nom,code,codeRegion";
+			ResponseEntity<DepartementDto> response = restTemplate.getForEntity(apiUrl, DepartementDto.class);
+			if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+				DepartementDto departementDto = response.getBody();
+				// Création du chemin du fichier PDF
+				String dest = "src/main/resources/pdf/" + departementDto.getNom() + ".pdf";
+				File file = new File(dest);
+				File parentDir = file.getParentFile();
+
+				if (!parentDir.exists()) {
+					parentDir.mkdirs(); // Crée les répertoires nécessaires
+				}
+
+				// Création du document PDF
+				Document document = new Document();
+				PdfWriter.getInstance(document, new FileOutputStream(dest));
+
+				document.open();
+				// Ajout d'informations au PDF
+				document.add(new Paragraph("Nom du département (API) : " + departementDto.getNom()));
+				document.add(new Paragraph("Code Département : " + department.getCode()));
+				document.add(new Paragraph("Liste des villes :"));
+				for (Town ville : department.getTowns()) {
+					document.add(new Paragraph("    Nom : " + ville.getName() + " | Population : " + ville.getNbInhabitants()));
+				}
+
+				document.close();
+
+			}
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Erreur lors de la création du fichier PDF", HttpStatus.INTERNAL_SERVER_ERROR);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new ResponseEntity<>("Erreur inconnue", HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+
+		return new ResponseEntity<>("PDF généré avec succès pour le département " + department.getName(), HttpStatus.OK);
+	}
+
+
 
 
 	@PutMapping
