@@ -2,6 +2,7 @@ package fr.diginamic.hello.rest;
 
 import java.util.List;
 
+import fr.diginamic.hello.exceptionHandler.FunctionalException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,8 +24,25 @@ public class DepartmentController {
 	@Autowired
 	DepartmentService departmentService;
 
+	private void validateDepartment(Department department) throws FunctionalException {
+		if(department.getName().length() > 3){
+			if(department.getCode().length() < 2 && department.getCode().length() > 3){
+				if(departmentService.findById(department.getId()).isPresent()){
+
+				}else{
+					throw new FunctionalException("Département avec cette id existe déjà");
+				}
+			}else{
+				throw new FunctionalException("Code de département trop long");
+			}
+		}else{
+			throw new FunctionalException("Nom de département trop court");
+		}
+	}
+
 	@PostMapping
-	public ResponseEntity<String> create(@RequestBody Department department){
+	public ResponseEntity<String> create(@RequestBody Department department) throws FunctionalException {
+		validateDepartment(department);
 		if(departmentService.create(department)) {
 			return new ResponseEntity<String>("Succès !",HttpStatus.OK);
 		}else {
@@ -33,13 +51,14 @@ public class DepartmentController {
 	}
 	@GetMapping
 	public List<Department> findAll(){
-
 		return departmentService.findAll();
 	}
 	@GetMapping("/{code}")
 	public Department findByCode(@PathVariable String code){
 		return departmentService.findByCode(code);
 	}
+
+
 	@PutMapping
 	public ResponseEntity<String> update(@RequestBody Department department){
 		if (!departmentService.update(department)) {

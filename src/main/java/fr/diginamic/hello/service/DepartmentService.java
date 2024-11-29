@@ -7,10 +7,8 @@ import fr.diginamic.hello.Repository.DepartmentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import fr.diginamic.hello.dao.DepartmentDAO;
 import fr.diginamic.hello.model.Department;
 
-import jakarta.annotation.PostConstruct;
 
 
 @Service
