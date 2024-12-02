@@ -15,6 +15,7 @@ import fr.diginamic.hello.Repository.VilleRepository;
 import fr.diginamic.hello.dto.DepartementDto;
 import fr.diginamic.hello.exceptionHandler.FunctionalException;
 import fr.diginamic.hello.service.DepartmentService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,8 +41,6 @@ public class TownController {
 	private TownService townService;
     @Autowired
     private DepartmentService departmentService;
-
-	private final static String FILE_NAME = "src/test/resources/chien-test-01.csv";
 
 
 	private void validateTown(Town town) throws FunctionalException {
@@ -100,57 +99,51 @@ public class TownController {
 
 
 	@GetMapping("/findByNbInhabitantsGreaterThan/{min}/csv")
-	public ResponseEntity<String> getTownByNbInhabitantsGreaterThanToCsv(@PathVariable("min") Integer min) throws FunctionalException {
-		// Vérifier si des villes répondent au critère
-		Iterable<Town> towns = townService.findByNbInhabitantsGreaterThan(min);
+	public void getTownByNbInhabitantsGreaterThanToCsv(
+			@PathVariable("min") Integer min,
+			HttpServletResponse response) throws IOException, FunctionalException {
 
-		if (towns == null) {
+		// Récupération des villes avec le critère
+		Iterable<Town> towns = townService.findByNbInhabitantsGreaterThan(min);
+		if (towns == null || towns == null) {
 			throw new FunctionalException("Aucune ville n'a une population supérieure à " + min);
 		}
 
-		// Chemin du fichier CSV
-		String dest = "src/main/resources/csv/ville.csv";
-		File file = new File(dest);
-		File parentDir = file.getParentFile();
+		// Préparer la réponse HTTP pour un fichier CSV
+		response.setContentType("text/csv");
+		response.setHeader("Content-Disposition", "attachment; filename=\"villes.csv\"");
 
-		if (!parentDir.exists()) {
-			parentDir.mkdirs(); // Crée les répertoires nécessaires
-		}
-
-		try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(dest))) {
+		// Écriture dans le flux de réponse
+		try (PrintWriter writer = response.getWriter()) {
 			// Écrire l'en-tête du fichier CSV
-			writer.write("Nom de la ville,Nombre d'habitants,Code département,Nom du département");
-			writer.newLine();
+			writer.println("Nom de la ville,Nombre d'habitants,Code département,Nom du département");
 
 			RestTemplate restTemplate = new RestTemplate();
 
-			// Écrire les données des villes dans le fichier CSV
+			// Écriture des données dans le fichier CSV
 			for (Town ville : towns) {
-				// Appeler l'API pour obtenir le nom du département
+				// Appel à l'API pour récupérer le nom du département
 				String apiUrl = "https://geo.api.gouv.fr/departements/" + ville.getDepartment().getCode() + "?fields=nom,code,codeRegion";
-				ResponseEntity<DepartementDto> response = restTemplate.getForEntity(apiUrl, DepartementDto.class);
+				ResponseEntity<DepartementDto> responseApi = restTemplate.getForEntity(apiUrl, DepartementDto.class);
 
-				String nomDepartement = "Non disponible"; // Par défaut, si l'API échoue
-				if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-					nomDepartement = response.getBody().getNom();
+				String nomDepartement = "Non disponible"; // Valeur par défaut si l'API échoue
+				if (responseApi.getStatusCode() == HttpStatus.OK && responseApi.getBody() != null) {
+					nomDepartement = responseApi.getBody().getNom();
 				}
 
-				// Écrire une ligne dans le fichier CSV
-				writer.write(String.format("%s,%d,%s,%s",
+				// Écrire une ligne de données dans le CSV
+				writer.printf("%s,%d,%s,%s%n",
 						ville.getName(),
 						ville.getNbInhabitants(),
 						ville.getDepartment().getCode(),
 						nomDepartement
-				));
-				writer.newLine();
+				);
 			}
-
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
-			return new ResponseEntity<>("Erreur lors de la génération du fichier CSV", HttpStatus.INTERNAL_SERVER_ERROR);
+			response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			throw new FunctionalException("Erreur lors de la génération du fichier CSV");
 		}
-
-		return new ResponseEntity<>("CSV généré avec succès à l'emplacement : " + dest, HttpStatus.OK);
 	}
 
 
