@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html  xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8">
+    <title>Liste des villes</title>
+  </head>
+  	<body>
+  <div class="table-responsive">
+  <P>
+  <h3>Profil utilisateur</h3>
+  <!--ul>
+  <li th:text="'Username :' + ${authentication.name}">Username toto</li>
+  <li th:text="'Authorities :' + ${authentication.authorities}">List des authorities</li>
+  </ul-->
+  </P>
+    <table class="table table-bordered">
+      <thead>
+      <tr>
+        <th>Ville</th>
+        <th>Nombre d'habitants</th>
+        <th>Départment</th>
+        <th>Code département</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr th:each="town:${towns}">
+        <td th:text="${town.name}">Paris</td>
+        <td th:text="${town.nbInhabitants}">15456656</td>
+        <td th:text="${town.department.name}">Paris</td>
+        <td th:text="${town.department.code}">75</td>
+        <td><a th:href="@{'/deleteTown/' + ${town.id}}">Supprimer</a></td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+	</body>
+</html>

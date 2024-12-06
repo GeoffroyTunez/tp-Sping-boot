@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html  xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Accueil DigiHello</title>
+</head>
+<body>
+<h1>Accueil DigiHello</h1>
+<h1>Hello</h1>
+
+<h3>Profil utilisateur :</h3>
+<ul>
+	<li th:text="'Usernname : ' +${authentication.getName()}">Username</li>
+	<li th:text="'Authorities : ' +${authentication.getAuthorities()}">Authorities</li>
+</ul>
+
+  	<a href="https://aplose.fr" th:href="@{/townList}">Liste des villes et départements...</a>
+  	
+</body>
+</html>
